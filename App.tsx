@@ -69,6 +69,21 @@ const App: React.FC = () => {
     localStorage.setItem('top5_categories', JSON.stringify(categories));
   }, [categories]);
 
+  // CarSkin Folientechnik automatisch hinzufügen, falls noch nicht vorhanden
+  useEffect(() => {
+    const carskinId = 'carskin-folientechnik-bamberg';
+    setProviders(prev => {
+      const carskinExists = prev.some(p => p.id === carskinId);
+      if (!carskinExists) {
+        const carskinProvider = MOCK_PROVIDERS.find(p => p.id === carskinId);
+        if (carskinProvider) {
+          return [carskinProvider, ...prev];
+        }
+      }
+      return prev;
+    });
+  }, []); // Nur einmal beim ersten Laden ausführen
+
   useEffect(() => {
     setActiveSubCategory('all');
     setShowAITip(false);

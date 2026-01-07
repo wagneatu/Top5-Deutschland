@@ -120,17 +120,18 @@ export const TRANSLATIONS = {
 export const MOCK_PROVIDERS: Provider[] = [
   {
     id: 'carskin-folientechnik-bamberg',
-    name: 'Carskin Folientechnik',
+    name: 'CarSkin Folientechnik',
     category: 'auto',
-    subCategory: 'folierung',
     city: 'Bamberg',
-    description: 'Ihr Spezialist für exklusive Fahrzeugfolierung, Lackschutz (PPF) und professionelle Scheibentönung in Bamberg. Mit über 15 Jahren Erfahrung veredeln wir Fahrzeuge mit höchster Präzision und Leidenschaft. Von der Design-Vollfolierung bis hin zum unsichtbaren Steinschlagschutz – wir machen Ihr Auto zum Unikat.',
+    description: 'Ihr Spezialist für exklusive Fahrzeugfolierung, XPEL-Lackschutz und professionelle Scheibentönung in Bamberg. Wir bieten Voll- und Teilfolierung, Keramikversiegelung und Steinschlagschutz mit bis zu 10 Jahren Garantie. Ihr Fahrzeug wird bei uns zum Unikat.',
+    features: 'XPEL-Lackschutz • Fahrzeugfolierung • Scheibentönung • Keramikversiegelung',
+    attributes: ['Parkplatz', 'Terminvereinbarung', 'Garantie'],
+    tags: ['Fahrzeugfolierung', 'Lackschutz', 'PPF', 'XPEL', 'Scheibentönung'],
     image: 'https://carskin.de/wp-content/uploads/2023/10/Slider-Carskin-Bamberg.jpg',
     gallery: [
       'https://carskin.de/wp-content/uploads/2023/10/Lackschutz-PPF-Bamberg-Portfolio.jpg',
       'https://carskin.de/wp-content/uploads/2023/10/Vollfolierung-Sportwagen-Bamberg-Referenz.jpg',
-      'https://carskin.de/wp-content/uploads/2023/10/Scheibentoenung-Carskin-Bamberg-Galerie.jpg',
-      'https://carskin.de/wp-content/uploads/2023/10/Design-Wrapping-High-End.jpg'
+      'https://carskin.de/wp-content/uploads/2023/10/Scheibentoenung-Carskin-Bamberg-Galerie.jpg'
     ],
     socialMedia: {
       instagram: 'https://www.instagram.com/carskin.de/',
@@ -138,15 +139,20 @@ export const MOCK_PROVIDERS: Provider[] = [
       tiktok: ''
     },
     website: 'https://carskin.de',
-    phone: '+49 951 7009000',
-    whatsapp: '+49 951 7009000',
+    phone: '+49 173 2682613',
+    whatsapp: '+49 173 2682613',
+    email: 'info@carskin.de',
     address: 'Laubanger 10, 96052 Bamberg',
     rating: 5.0,
     reviewCount: 158,
     reviews: [],
     tier: 'exclusive',
-    openingHours: 'Montag: 08:00 - 17:00\nDienstag: 08:00 - 17:00\nMittwoch: 08:00 - 17:00\nDonnerstag: 08:00 - 17:00\nFreitag: 08:00 - 17:00\nSamstag: Geschlossen\nSonntag: Geschlossen',
+    openingHours: 'Montag: 09:00 - 16:00\nDienstag: 09:00 - 16:00\nMittwoch: 09:00 - 16:00\nDonnerstag: 09:00 - 16:00\nFreitag: 09:00 - 16:00\nSamstag: Geschlossen\nSonntag: Geschlossen',
     isApproved: true,
-    coordinates: { lat: 49.91428, lng: 10.88725 }
+    approvalStatus: 'active',
+    paymentStatus: 'paid',
+    validUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+    coordinates: { lat: 49.91428, lng: 10.88725 },
+    mapsUrl: 'https://www.google.com/maps/place/Laubanger+10,+96052+Bamberg'
   }
 ];
