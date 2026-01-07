@@ -24,6 +24,39 @@ const ProviderDetail: React.FC<ProviderDetailProps> = ({
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Debug: Zeige alle Bild-URLs in der Konsole
+  useEffect(() => {
+    console.log('🔍 Provider Detail geladen:', {
+      name: provider.name,
+      id: provider.id,
+      image: provider.image,
+      logo: provider.logo,
+      gallery: provider.gallery,
+      galleryCount: provider.gallery?.length || 0
+    });
+    
+    // Prüfe ob URLs Supabase-URLs sind
+    if (provider.image) {
+      const isSupabaseUrl = provider.image.includes('supabase.co');
+      console.log('📸 Hauptbild URL:', {
+        url: provider.image,
+        isSupabaseUrl,
+        startsWithHttp: provider.image.startsWith('http')
+      });
+    }
+    
+    if (provider.gallery && provider.gallery.length > 0) {
+      provider.gallery.forEach((url, idx) => {
+        const isSupabaseUrl = url.includes('supabase.co');
+        console.log(`🖼️ Galerie Bild ${idx}:`, {
+          url,
+          isSupabaseUrl,
+          startsWithHttp: url.startsWith('http')
+        });
+      });
+    }
+  }, [provider]);
+
   const formatUrl = (url: string | undefined) => {
     if (!url) return '';
     return url.startsWith('http') ? url : `https://${url}`;
@@ -148,19 +181,25 @@ const ProviderDetail: React.FC<ProviderDetailProps> = ({
               <div className="grid grid-cols-3 gap-4">
                 {(provider.gallery && provider.gallery.length > 0) ? (
                   provider.gallery.map((img, idx) => (
-                    <img 
-                      key={idx} 
-                      src={img} 
-                      className="aspect-square rounded-2xl object-cover border border-white/5 hover:scale-105 transition-transform duration-500 cursor-zoom-in shadow-lg bg-zinc-900" 
-                      alt={`${provider.name} Galerie ${idx + 1}`}
-                      crossOrigin="anonymous"
-                      onError={(e) => {
-                        console.error(`Fehler beim Laden des Galerie-Bildes ${idx}:`, img);
-                        const target = e.target as HTMLImageElement;
-                        target.src = `https://picsum.photos/seed/${provider.id}-${idx}/400/400`;
-                      }}
-                      onLoad={() => console.log(`Galerie-Bild ${idx} erfolgreich geladen:`, img)}
-                    />
+                    <div key={idx} className="aspect-square rounded-2xl overflow-hidden border border-white/5 shadow-lg bg-zinc-900">
+                      <img 
+                        src={img} 
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-zoom-in" 
+                        alt={`${provider.name} Galerie ${idx + 1}`}
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          console.error(`❌ Fehler beim Laden des Galerie-Bildes ${idx}:`, img);
+                          console.error('Provider:', provider.name, 'ID:', provider.id);
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-600 text-xs">Bild nicht verfügbar</div>';
+                          }
+                        }}
+                        onLoad={() => console.log(`✅ Galerie-Bild ${idx} erfolgreich geladen:`, img)}
+                      />
+                    </div>
                   ))
                 ) : (
                   [1,2,3].map(i => <div key={i} className="aspect-square rounded-2xl bg-white/5 border border-white/5" />)

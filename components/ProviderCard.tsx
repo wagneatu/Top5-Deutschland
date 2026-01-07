@@ -25,20 +25,30 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
       style={{ animationDelay: `${index * 100}ms` }}
     >
       <div className="relative h-56 overflow-hidden" onClick={onClick}>
-        <img 
-          src={provider.image || `https://picsum.photos/seed/${provider.id}/800/600`} 
-          alt={provider.name} 
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          crossOrigin="anonymous"
-          onError={(e) => {
-            console.error('Fehler beim Laden des Provider-Bildes:', provider.image);
-            const target = e.target as HTMLImageElement;
-            if (provider.image) {
-              target.src = `https://picsum.photos/seed/${provider.id}/800/600`;
-            }
-          }}
-          onLoad={() => provider.image && console.log('Provider-Bild erfolgreich geladen:', provider.image)}
-        />
+        {provider.image ? (
+          <img 
+            src={provider.image} 
+            alt={provider.name} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            crossOrigin="anonymous"
+            onError={(e) => {
+              console.error('❌ Fehler beim Laden des Provider-Bildes:', provider.image);
+              console.error('Provider:', provider.name, 'ID:', provider.id);
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              // Zeige einen Platzhalter statt Fallback-Bild
+              const parent = target.parentElement;
+              if (parent) {
+                parent.innerHTML = '<div class="w-full h-full bg-zinc-900 flex items-center justify-center text-gray-600 text-sm">Bild konnte nicht geladen werden</div>';
+              }
+            }}
+            onLoad={() => console.log('✅ Provider-Bild erfolgreich geladen:', provider.image)}
+          />
+        ) : (
+          <div className="w-full h-full bg-zinc-900 flex items-center justify-center text-gray-600 text-sm">
+            Kein Bild
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
         
         <div className="absolute top-4 left-4 bg-gold text-black font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
