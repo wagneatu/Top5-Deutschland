@@ -2,7 +2,8 @@
 import React, { useState, useRef } from 'react';
 import { Language, Category, PricingTier, Provider, CategoryInfo } from '../types';
 import { ICONS } from '../constants';
-import { UPLOAD_ENDPOINTS, API_BASE_URL } from '../config';
+import { SUPABASE_STORAGE_BUCKET } from '../config';
+import { supabase } from '../lib/supabaseclient';
 
 interface ProviderRegistrationProps {
   lang: Language;
@@ -42,6 +43,54 @@ const ProviderRegistration: React.FC<ProviderRegistrationProps> = ({ lang, categ
     { id: 'exclusive', name: 'Exclusive', price: '99€', features: ['Top 5 Platzierung', 'Ads Support', 'Priority Boost'] }
   ];
 
+  const uploadToSupabase = async (file: File): Promise<string | null> => {
+    // Prüfe zuerst, ob der Bucket existiert
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error('Fehler beim Abrufen der Buckets:', listError);
+      throw new Error(`Konnte Buckets nicht abrufen: ${listError.message}`);
+    }
+
+    const bucketExists = buckets?.some(b => b.name === SUPABASE_STORAGE_BUCKET);
+    if (!bucketExists) {
+      const availableBuckets = buckets?.map(b => b.name).join(', ') || 'keine';
+      console.error(`Bucket "${SUPABASE_STORAGE_BUCKET}" existiert nicht! Verfügbare Buckets: ${availableBuckets}`);
+      throw new Error(`Bucket "${SUPABASE_STORAGE_BUCKET}" existiert nicht. Verfügbare Buckets: ${availableBuckets}`);
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+
+    console.log('Upload startet:', { bucket: SUPABASE_STORAGE_BUCKET, filePath, fileName: file.name, fileSize: file.size });
+
+    const { data, error } = await supabase.storage
+      .from(SUPABASE_STORAGE_BUCKET)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Supabase Upload-Fehler Details:', {
+        message: error.message,
+        statusCode: error.statusCode,
+        error: error
+      });
+      throw new Error(`Upload fehlgeschlagen: ${error.message} (Code: ${error.statusCode || 'unbekannt'})`);
+    }
+
+    console.log('Upload erfolgreich:', data);
+
+    const { data: urlData } = supabase.storage
+      .from(SUPABASE_STORAGE_BUCKET)
+      .getPublicUrl(filePath);
+
+    console.log('Public URL:', urlData.publicUrl);
+    return urlData.publicUrl;
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'main' | 'gallery') => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -51,52 +100,28 @@ const ProviderRegistration: React.FC<ProviderRegistrationProps> = ({ lang, categ
       if (type === 'logo' || type === 'main') {
         const file = files[0];
         if (file) {
-          const formData = new FormData();
-          formData.append('image', file);
-
-          const response = await fetch(UPLOAD_ENDPOINTS.single, {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (!response.ok) {
-            throw new Error('Upload fehlgeschlagen');
-          }
-
-          const data = await response.json();
-          const imageUrl = data.url.startsWith('http') ? data.url : `${API_BASE_URL}${data.url}`;
+          const imageUrl = await uploadToSupabase(file);
           
-          if (type === 'logo') {
-            setImages(prev => ({ ...prev, logo: imageUrl }));
-          } else {
-            setImages(prev => ({ ...prev, mainImage: imageUrl }));
+          if (imageUrl) {
+            if (type === 'logo') {
+              setImages(prev => ({ ...prev, logo: imageUrl }));
+            } else {
+              setImages(prev => ({ ...prev, mainImage: imageUrl }));
+            }
           }
         }
       } else {
         // Galerie - mehrere Bilder
-        const formData = new FormData();
-        for (let i = 0; i < files.length; i++) {
-          formData.append('images', files[i]);
-        }
-
-        const response = await fetch(UPLOAD_ENDPOINTS.multiple, {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error('Upload fehlgeschlagen');
-        }
-
-        const data = await response.json();
-        const newGalleryUrls = data.urls.map((url: string) => 
-          url.startsWith('http') ? url : `${API_BASE_URL}${url}`
-        );
-        setImages(prev => ({ ...prev, gallery: [...prev.gallery, ...newGalleryUrls] }));
+        const uploadPromises = Array.from(files).map(file => uploadToSupabase(file));
+        const urls = await Promise.all(uploadPromises);
+        const validUrls = urls.filter((url): url is string => url !== null);
+        
+        setImages(prev => ({ ...prev, gallery: [...prev.gallery, ...validUrls] }));
       }
     } catch (error) {
       console.error('Upload-Fehler:', error);
-      alert('Fehler beim Hochladen der Bilder. Bitte versuche es erneut.');
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+      alert(`Fehler beim Hochladen der Bilder: ${errorMessage}\n\nBitte öffne die Browser-Konsole (F12) für mehr Details.`);
     } finally {
       setUploading(false);
     }

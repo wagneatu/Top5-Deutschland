@@ -2,7 +2,8 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { Provider, Language, Review } from '../types';
 import { ICONS, TRANSLATIONS } from '../constants';
-import { UPLOAD_ENDPOINTS, API_BASE_URL } from '../config';
+import { SUPABASE_STORAGE_BUCKET } from '../config';
+import { supabase } from '../lib/supabaseclient';
 
 interface ProviderDetailProps {
   provider: Provider;
@@ -34,21 +35,23 @@ const ProviderDetail: React.FC<ProviderDetailProps> = ({
 
     setUploadingImage(true);
     try {
-      const formData = new FormData();
-      formData.append('image', file);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `reviews/${fileName}`;
 
-      const response = await fetch(UPLOAD_ENDPOINTS.single, {
-        method: 'POST',
-        body: formData,
-      });
+      const { error } = await supabase.storage
+        .from(SUPABASE_STORAGE_BUCKET)
+        .upload(filePath, file);
 
-      if (!response.ok) {
-        throw new Error('Upload fehlgeschlagen');
+      if (error) {
+        throw new Error(error.message);
       }
 
-      const data = await response.json();
-      const imageUrl = data.url.startsWith('http') ? data.url : `${API_BASE_URL}${data.url}`;
-      setNewReview(prev => ({ ...prev, image: imageUrl }));
+      const { data: urlData } = supabase.storage
+        .from(SUPABASE_STORAGE_BUCKET)
+        .getPublicUrl(filePath);
+
+      setNewReview(prev => ({ ...prev, image: urlData.publicUrl }));
     } catch (error) {
       console.error('Upload-Fehler:', error);
       alert('Fehler beim Hochladen des Bildes. Bitte versuche es erneut.');

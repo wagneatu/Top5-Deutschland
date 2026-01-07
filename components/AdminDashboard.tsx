@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Provider, Language, PricingTier, CategoryInfo, PaymentStatus, ApprovalStatus, Review } from '../types';
 import { ICONS } from '../constants';
-import { UPLOAD_ENDPOINTS, API_BASE_URL } from '../config';
+import { SUPABASE_STORAGE_BUCKET } from '../config';
+import { supabase } from '../lib/supabaseclient';
 
 interface AdminDashboardProps {
   providers: Provider[];
@@ -129,6 +130,27 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ providers, setProviders
 
   const [uploading, setUploading] = useState(false);
 
+  const uploadToSupabase = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from(SUPABASE_STORAGE_BUCKET)
+      .upload(filePath, file);
+
+    if (error) {
+      console.error('Supabase Upload-Fehler:', error);
+      throw new Error(error.message);
+    }
+
+    const { data: urlData } = supabase.storage
+      .from(SUPABASE_STORAGE_BUCKET)
+      .getPublicUrl(filePath);
+
+    return urlData.publicUrl;
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'logo' | 'main' | 'gallery') => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -139,45 +161,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ providers, setProviders
       if (target === 'logo' || target === 'main') {
         const file = files[0];
         if (file) {
-          const formData = new FormData();
-          formData.append('image', file);
-
-          const response = await fetch(UPLOAD_ENDPOINTS.single, {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (!response.ok) {
-            throw new Error('Upload fehlgeschlagen');
+          const imageUrl = await uploadToSupabase(file);
+          if (imageUrl) {
+            setFormState(prev => ({ ...prev, [target === 'logo' ? 'logo' : 'image']: imageUrl }));
           }
-
-          const data = await response.json();
-          const imageUrl = data.url.startsWith('http') ? data.url : `${API_BASE_URL}${data.url}`;
-          setFormState(prev => ({ ...prev, [target === 'logo' ? 'logo' : 'image']: imageUrl }));
         }
       } else {
         // Mehrere Bilder für Galerie
-        const formData = new FormData();
-        for (let i = 0; i < files.length; i++) {
-          formData.append('images', files[i]);
-        }
-
-        const response = await fetch(UPLOAD_ENDPOINTS.multiple, {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error('Upload fehlgeschlagen');
-        }
-
-        const data = await response.json();
-        const newGallery = [...(formState.gallery || [])];
-        data.urls.forEach((url: string) => {
-          const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
-          newGallery.push(fullUrl);
-        });
-        setFormState(prev => ({ ...prev, gallery: newGallery }));
+        const uploadPromises = Array.from(files).map(file => uploadToSupabase(file));
+        const urls = await Promise.all(uploadPromises);
+        const validUrls = urls.filter((url): url is string => url !== null);
+        
+        setFormState(prev => ({ ...prev, gallery: [...(prev.gallery || []), ...validUrls] }));
       }
     } catch (error) {
       console.error('Upload-Fehler:', error);
