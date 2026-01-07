@@ -74,20 +74,27 @@ const App: React.FC = () => {
     setShowAITip(false);
   }, [activeCategory, selectedCity]);
 
-  // Hash-basierte Navigation für Admin-Zugang
+  // Hash-basierte Navigation für Admin-Zugang - MEHRFACH PRÜFEN
   useEffect(() => {
     const checkHash = () => {
       const hash = window.location.hash.replace('#', '').toLowerCase().trim();
       if (hash === 'admin') {
         setViewState('admin');
+        return true;
       }
+      return false;
     };
 
     // Sofort beim Mount prüfen
-    checkHash();
+    if (checkHash()) return;
 
-    // Auch nach kurzer Verzögerung prüfen (für direkte URL-Ladung)
-    const timer = setTimeout(checkHash, 50);
+    // Mehrfach prüfen für verschiedene Szenarien
+    const timers = [
+      setTimeout(() => checkHash(), 50),
+      setTimeout(() => checkHash(), 100),
+      setTimeout(() => checkHash(), 200),
+      setTimeout(() => checkHash(), 500),
+    ];
 
     // Auf Hash-Änderungen hören
     const handleHashChange = () => {
@@ -97,10 +104,22 @@ const App: React.FC = () => {
     window.addEventListener('hashchange', handleHashChange);
     window.addEventListener('popstate', handleHashChange);
     
+    // Auch auf Load-Event hören
+    window.addEventListener('load', checkHash);
+    
     return () => {
-      clearTimeout(timer);
+      timers.forEach(t => clearTimeout(t));
       window.removeEventListener('hashchange', handleHashChange);
       window.removeEventListener('popstate', handleHashChange);
+      window.removeEventListener('load', checkHash);
+    };
+  }, []);
+
+  // Globale Funktion für direkten Zugriff über Konsole
+  useEffect(() => {
+    (window as any).openAdmin = () => {
+      setViewState('admin');
+      window.location.hash = 'admin';
     };
   }, []);
 
@@ -399,6 +418,26 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* VERSTECKTER ADMIN-BUTTON - Rechts unten, unsichtbar aber klickbar */}
+        <button 
+          onClick={() => {
+            setViewState('admin');
+            window.location.hash = 'admin';
+          }}
+          className="fixed bottom-20 right-4 w-12 h-12 bg-gold/10 border border-gold/30 rounded-full hover:bg-gold/20 transition-all z-[9999] opacity-30 hover:opacity-100"
+          aria-label="Admin"
+          title="Admin Zugang"
+          style={{ 
+            position: 'fixed',
+            bottom: '80px',
+            right: '16px',
+            width: '48px',
+            height: '48px',
+            zIndex: 9999
+          }}
+        >
+          <ICONS.LayoutDashboard className="w-6 h-6 text-gold mx-auto" />
+        </button>
       </footer>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-white/10 md:hidden flex justify-around items-center p-3 z-50">
