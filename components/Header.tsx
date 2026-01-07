@@ -13,10 +13,11 @@ interface HeaderProps {
   setSelectedCity: (c: string) => void;
   setView: (v: 'home' | 'details' | 'admin' | 'register' | 'favorites') => void;
   providers: Provider[];
+  onLogoClick?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  lang, setLang, role, setRole, selectedCity, setSelectedCity, setView, providers 
+  lang, setLang, role, setRole, selectedCity, setSelectedCity, setView, providers, onLogoClick
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
@@ -33,7 +34,12 @@ const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div 
           className="flex items-center cursor-pointer group py-1"
-          onClick={() => setView('home')}
+          onClick={() => {
+            if (onLogoClick) {
+              onLogoClick();
+            }
+            setView('home');
+          }}
         >
           <Logo compact={true} className="h-10 md:h-12 group-hover:brightness-110 transition-all" />
         </div>

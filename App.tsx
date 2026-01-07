@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Role, Language, Category, Provider, GastronomySubCategory, Review, CategoryInfo } from './types';
 import { CATEGORIES as INITIAL_CATEGORIES, TRANSLATIONS, MOCK_PROVIDERS, ICONS, GASTRONOMY_SUB_CATEGORIES } from './constants';
 import ProviderCard from './components/ProviderCard';
@@ -76,19 +76,32 @@ const App: React.FC = () => {
 
   // Hash-basierte Navigation für Admin-Zugang
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
+    const checkHash = () => {
+      const hash = window.location.hash.replace('#', '').toLowerCase().trim();
       if (hash === 'admin') {
-        setView('admin');
+        setViewState('admin');
       }
     };
 
-    // Beim Laden prüfen
-    handleHashChange();
+    // Sofort beim Mount prüfen
+    checkHash();
+
+    // Auch nach kurzer Verzögerung prüfen (für direkte URL-Ladung)
+    const timer = setTimeout(checkHash, 50);
 
     // Auf Hash-Änderungen hören
+    const handleHashChange = () => {
+      checkHash();
+    };
+
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+    
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
+    };
   }, []);
 
   // Versteckter Admin-Zugang: Strg+Shift+A
@@ -151,6 +164,29 @@ const App: React.FC = () => {
 
   const t = TRANSLATIONS[lang];
 
+  // Versteckter Admin-Zugang: 5x auf Logo klicken
+  const [logoClickCount, setLogoClickCount] = useState(0);
+  const logoClickTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handleLogoClick = () => {
+    setLogoClickCount(prev => {
+      const newCount = prev + 1;
+      if (newCount >= 5) {
+        setView('admin');
+        window.location.hash = 'admin';
+        return 0;
+      }
+      // Reset nach 2 Sekunden
+      if (logoClickTimer.current) {
+        clearTimeout(logoClickTimer.current);
+      }
+      logoClickTimer.current = setTimeout(() => {
+        setLogoClickCount(0);
+      }, 2000);
+      return newCount;
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-white pb-20 md:pb-0">
       <Header 
@@ -162,6 +198,7 @@ const App: React.FC = () => {
         selectedCity={selectedCity} 
         setSelectedCity={setSelectedCity}
         providers={providers}
+        onLogoClick={handleLogoClick}
       />
 
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 pt-4">
