@@ -12,7 +12,7 @@ interface LogoProps {
  * Nutzt das Original-Logo von der bereitgestellten URL.
  */
 const Logo: React.FC<LogoProps> = ({ className = "h-12", showSlogan = false, compact = false }) => {
-  const logoUrl = "hhttps://carskin.de/wp-content/uploads/2023/07/Screenshot-2023-07-28-at-12-44-51-Carskin-Folientechnik-@carskin_folientechnik-•-Instagram-Fotos-und-Videos.png";
+  const logoUrl = "https://carskin.de/wp-content/uploads/2026/01/LogoSVG.svg";
 
   return (
     <div className={`flex flex-col items-start justify-center ${className} select-none`}>
