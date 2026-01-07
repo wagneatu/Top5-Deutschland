@@ -187,6 +187,41 @@ const App: React.FC = () => {
 
   const selectedProvider = providers.find(p => p.id === selectedProviderId);
 
+  // Debug: Zeige Provider-Daten in Konsole
+  useEffect(() => {
+    if (selectedProvider) {
+      console.log('🔍 === SELECTED PROVIDER DEBUG ===');
+      console.log('Provider:', selectedProvider.name);
+      console.log('Image:', selectedProvider.image);
+      console.log('Logo:', selectedProvider.logo);
+      console.log('Gallery:', selectedProvider.gallery);
+      console.log('Gallery Count:', selectedProvider.gallery?.length || 0);
+      
+      // Teste alle Bild-URLs
+      const testImage = async (url: string, name: string) => {
+        try {
+          const response = await fetch(url, { method: 'HEAD' });
+          console.log(`${name} (${url}):`, response.status, response.ok ? '✅ OK' : '❌ FEHLER');
+        } catch (error) {
+          console.error(`${name} (${url}): ❌ NICHT ERREICHBAR`, error);
+        }
+      };
+      
+      if (selectedProvider.image) {
+        testImage(selectedProvider.image, 'Hauptbild');
+      }
+      if (selectedProvider.logo) {
+        testImage(selectedProvider.logo, 'Logo');
+      }
+      if (selectedProvider.gallery) {
+        selectedProvider.gallery.forEach((url, idx) => {
+          testImage(url, `Galerie ${idx}`);
+        });
+      }
+      console.log('🔍 === ENDE DEBUG ===');
+    }
+  }, [selectedProvider]);
+
   const filteredProviders = providers.filter(p => {
     const cityMatch = p.city === selectedCity;
     const categoryMatch = activeCategory ? p.category === activeCategory : true;

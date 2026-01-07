@@ -129,7 +129,12 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
         <div className="flex items-center justify-between border-t border-white/10 pt-4">
           <div className="flex items-center gap-1">
             <ICONS.Star className="w-4 h-4 text-gold fill-gold" />
-            <span className="font-bold text-sm">{provider.rating}</span>
+            <span className="font-bold text-sm">
+              {typeof provider.rating === 'number' 
+                ? provider.rating.toFixed(1).replace('.', ',')
+                : Number(provider.rating || 0).toFixed(1).replace('.', ',')
+              }
+            </span>
             <span className="text-gray-500 text-xs font-light">({provider.reviewCount})</span>
           </div>
           <div className="flex items-center gap-1 text-gray-500">
