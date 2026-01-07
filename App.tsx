@@ -40,7 +40,22 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('top5_favorites');
     return saved ? JSON.parse(saved) : [];
   });
-  const [view, setView] = useState<'home' | 'details' | 'admin' | 'register' | 'favorites'>('home');
+  const [view, setViewState] = useState<'home' | 'details' | 'admin' | 'register' | 'favorites'>(() => {
+    // Beim Laden prüfen, ob Hash vorhanden ist
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'admin') return 'admin';
+    return 'home';
+  });
+
+  // Wrapper-Funktion, die auch den Hash synchronisiert
+  const setView = (newView: 'home' | 'details' | 'admin' | 'register' | 'favorites') => {
+    setViewState(newView);
+    if (newView === 'admin') {
+      window.location.hash = 'admin';
+    } else if (window.location.hash === '#admin') {
+      window.location.hash = '';
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem('top5_favorites', JSON.stringify(favorites));
@@ -58,6 +73,37 @@ const App: React.FC = () => {
     setActiveSubCategory('all');
     setShowAITip(false);
   }, [activeCategory, selectedCity]);
+
+  // Hash-basierte Navigation für Admin-Zugang
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'admin') {
+        setView('admin');
+      }
+    };
+
+    // Beim Laden prüfen
+    handleHashChange();
+
+    // Auf Hash-Änderungen hören
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Versteckter Admin-Zugang: Strg+Shift+A
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        setView('admin');
+        window.location.hash = 'admin';
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   const toggleFavorite = (id: string) => {
     setFavorites(prev => 
