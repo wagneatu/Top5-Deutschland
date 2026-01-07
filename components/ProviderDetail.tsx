@@ -87,10 +87,34 @@ const ProviderDetail: React.FC<ProviderDetailProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-12">
           <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-zinc-900">
-            {provider.image && <img src={provider.image} className="w-full h-full object-cover" />}
+            {provider.image && (
+              <img 
+                src={provider.image} 
+                className="w-full h-full object-cover" 
+                alt={provider.name}
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  console.error('Fehler beim Laden des Hauptbildes:', provider.image);
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+                onLoad={() => console.log('Hauptbild erfolgreich geladen:', provider.image)}
+              />
+            )}
             {provider.logo && (
               <div className="absolute top-4 left-4 w-16 h-16 bg-black p-2 rounded-2xl border border-gold/30 shadow-2xl">
-                <img src={provider.logo} className="w-full h-full object-contain" />
+                <img 
+                  src={provider.logo} 
+                  className="w-full h-full object-contain" 
+                  alt={`${provider.name} Logo`}
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    console.error('Fehler beim Laden des Logos:', provider.logo);
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                  onLoad={() => console.log('Logo erfolgreich geladen:', provider.logo)}
+                />
               </div>
             )}
           </div>
@@ -124,7 +148,19 @@ const ProviderDetail: React.FC<ProviderDetailProps> = ({
               <div className="grid grid-cols-3 gap-4">
                 {(provider.gallery && provider.gallery.length > 0) ? (
                   provider.gallery.map((img, idx) => (
-                    <img key={idx} src={img} className="aspect-square rounded-2xl object-cover border border-white/5 hover:scale-105 transition-transform duration-500 cursor-zoom-in shadow-lg bg-zinc-900" />
+                    <img 
+                      key={idx} 
+                      src={img} 
+                      className="aspect-square rounded-2xl object-cover border border-white/5 hover:scale-105 transition-transform duration-500 cursor-zoom-in shadow-lg bg-zinc-900" 
+                      alt={`${provider.name} Galerie ${idx + 1}`}
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        console.error(`Fehler beim Laden des Galerie-Bildes ${idx}:`, img);
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://picsum.photos/seed/${provider.id}-${idx}/400/400`;
+                      }}
+                      onLoad={() => console.log(`Galerie-Bild ${idx} erfolgreich geladen:`, img)}
+                    />
                   ))
                 ) : (
                   [1,2,3].map(i => <div key={i} className="aspect-square rounded-2xl bg-white/5 border border-white/5" />)
@@ -141,7 +177,17 @@ const ProviderDetail: React.FC<ProviderDetailProps> = ({
                 <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
                   {communityImages.map((img, idx) => (
                     <div key={idx} className="shrink-0 w-40 h-40 rounded-2xl overflow-hidden border border-white/10 shadow-xl group/ci">
-                      <img src={img} className="w-full h-full object-cover group-hover/ci:scale-110 transition-transform duration-700" />
+                      <img 
+                        src={img} 
+                        className="w-full h-full object-cover group-hover/ci:scale-110 transition-transform duration-700" 
+                        alt={`Community Bild ${idx + 1}`}
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          console.error(`Fehler beim Laden des Community-Bildes ${idx}:`, img);
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -242,7 +288,17 @@ const ProviderDetail: React.FC<ProviderDetailProps> = ({
                     <div className="flex flex-col md:flex-row gap-4">
                       {rev.image && (
                         <div className="w-32 h-32 shrink-0 rounded-xl overflow-hidden border border-white/10 shadow-lg">
-                          <img src={rev.image} className="w-full h-full object-cover" />
+                          <img 
+                            src={rev.image} 
+                            className="w-full h-full object-cover" 
+                            alt={`Review von ${rev.userName}`}
+                            crossOrigin="anonymous"
+                            onError={(e) => {
+                              console.error('Fehler beim Laden des Review-Bildes:', rev.image);
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
                         </div>
                       )}
                       <p className="text-gray-400 text-sm italic leading-relaxed">"{rev.comment}"</p>

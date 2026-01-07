@@ -29,6 +29,15 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           src={provider.image || `https://picsum.photos/seed/${provider.id}/800/600`} 
           alt={provider.name} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          crossOrigin="anonymous"
+          onError={(e) => {
+            console.error('Fehler beim Laden des Provider-Bildes:', provider.image);
+            const target = e.target as HTMLImageElement;
+            if (provider.image) {
+              target.src = `https://picsum.photos/seed/${provider.id}/800/600`;
+            }
+          }}
+          onLoad={() => provider.image && console.log('Provider-Bild erfolgreich geladen:', provider.image)}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
         

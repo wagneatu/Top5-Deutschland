@@ -88,6 +88,27 @@ const ProviderRegistration: React.FC<ProviderRegistrationProps> = ({ lang, categ
       .getPublicUrl(filePath);
 
     console.log('Public URL:', urlData.publicUrl);
+    console.log('Vollständige URL-Details:', {
+      publicUrl: urlData.publicUrl,
+      bucket: SUPABASE_STORAGE_BUCKET,
+      path: filePath
+    });
+
+    // Test ob die URL erreichbar ist
+    try {
+      const response = await fetch(urlData.publicUrl, { method: 'HEAD' });
+      console.log('URL-Test Response:', {
+        status: response.status,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      if (!response.ok) {
+        console.warn('⚠️ URL ist nicht öffentlich zugänglich! Status:', response.status);
+      }
+    } catch (fetchError) {
+      console.warn('⚠️ URL-Test fehlgeschlagen (möglicherweise CORS-Problem):', fetchError);
+    }
+
     return urlData.publicUrl;
   };
 
@@ -257,7 +278,16 @@ const ProviderRegistration: React.FC<ProviderRegistrationProps> = ({ lang, categ
                   {uploading && !images.logo ? (
                     <span className="text-xs text-gold animate-pulse">Upload...</span>
                   ) : images.logo ? (
-                    <img src={images.logo} className="w-full h-full object-cover rounded-lg" alt="Logo" />
+                    <img 
+                      src={images.logo} 
+                      className="w-full h-full object-cover rounded-lg" 
+                      alt="Logo"
+                      onError={(e) => {
+                        console.error('Fehler beim Laden des Logo-Bildes:', images.logo);
+                        console.error('Event:', e);
+                      }}
+                      onLoad={() => console.log('Logo erfolgreich geladen:', images.logo)}
+                    />
                   ) : (
                     <>
                       <ICONS.Plus className="w-6 h-6 mb-1" />
@@ -298,7 +328,16 @@ const ProviderRegistration: React.FC<ProviderRegistrationProps> = ({ lang, categ
                   {uploading && !images.mainImage ? (
                     <span className="text-xs text-gold animate-pulse">Upload...</span>
                   ) : images.mainImage ? (
-                    <img src={images.mainImage} className="w-full h-full object-cover rounded-lg" alt="Hauptbild" />
+                    <img 
+                      src={images.mainImage} 
+                      className="w-full h-full object-cover rounded-lg" 
+                      alt="Hauptbild"
+                      onError={(e) => {
+                        console.error('Fehler beim Laden des Hauptbildes:', images.mainImage);
+                        console.error('Event:', e);
+                      }}
+                      onLoad={() => console.log('Hauptbild erfolgreich geladen:', images.mainImage)}
+                    />
                   ) : (
                     <>
                       <ICONS.Plus className="w-6 h-6 mb-1" />
@@ -358,7 +397,16 @@ const ProviderRegistration: React.FC<ProviderRegistrationProps> = ({ lang, categ
               <div className="flex-1 grid grid-cols-4 gap-2">
                 {images.gallery.map((url, index) => (
                   <div key={index} className="relative group">
-                    <img src={url} className="w-full h-24 object-cover rounded-lg" alt={`Galerie ${index + 1}`} />
+                    <img 
+                      src={url} 
+                      className="w-full h-24 object-cover rounded-lg" 
+                      alt={`Galerie ${index + 1}`}
+                      onError={(e) => {
+                        console.error(`Fehler beim Laden des Galerie-Bildes ${index}:`, url);
+                        console.error('Event:', e);
+                      }}
+                      onLoad={() => console.log(`Galerie-Bild ${index} erfolgreich geladen:`, url)}
+                    />
                     <button
                       type="button"
                       onClick={() => setImages(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== index) }))}
