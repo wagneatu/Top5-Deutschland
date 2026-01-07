@@ -1,0 +1,7 @@
+{
+  "name": "Top5Deutschland FETIG",
+  "description": "Discover the top 5 local businesses in every German city. A premium platform for local recommendations with taxi integration, routing, and exclusive provider listings.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
